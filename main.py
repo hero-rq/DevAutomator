@@ -18,7 +18,7 @@ def parse_arguments():
     parser.add_argument("--research-topic", default="YOUR DEVELOPING IDEA", help="Your developing project idea")
     return parser.parse_args()
 
-def generate_code(api_key, research_topic, task_notes):
+def generate_code(api_key, research_topic):
     """
     Uses the OpenAI API to generate a Python script based on the given research topic and task notes.
     """
@@ -26,7 +26,6 @@ def generate_code(api_key, research_topic, task_notes):
     prompt = (
         f"Generate a complete Python script that fulfills the following requirements:\n"
         f"Research Topic: {research_topic}\n"
-        f"Tasks: {', '.join(task_notes)}\n\n"
         "Ensure the code is well-commented and structured for a development automation process."
     )
     
