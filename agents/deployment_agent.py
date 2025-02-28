@@ -1,7 +1,7 @@
 import logging
 import subprocess
 from utils.logger import setup_logger  # Centralized logger from utils
-import openai
+from openai import OpenAI  # OpenAI v1.x client
 
 class DeploymentAgent:
     def __init__(self, config):
@@ -12,8 +12,9 @@ class DeploymentAgent:
         self.config = config
         self.logger = setup_logger(__name__)
         self.logger.info("DeploymentAgent initialized with configuration.")
-        # Set up the OpenAI API key from configuration if provided.
-        openai.api_key = self.config.get("openai_api_key", "")
+
+        # Initialize OpenAI Client
+        self.client = OpenAI(api_key=self.config.get("openai_api_key", ""))
 
     def package_project(self):
         """
@@ -23,12 +24,15 @@ class DeploymentAgent:
         """
         self.logger.info("Packaging the project for deployment...")
         try:
-            # Simulate packaging; replace with real packaging commands as needed.
-            result = subprocess.run(["echo", "Packaging simulated..."], capture_output=True, text=True)
-            self.logger.info("Packaging output:\n" + result.stdout)
+            # Replace this with actual packaging commands (e.g., tar, zip, docker build)
+            result = subprocess.run(["echo", "Packaging simulated..."], capture_output=True, text=True, check=True)
+            self.logger.info("Packaging output:\n" + result.stdout.strip())
             return True
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"Packaging command failed: {e}")
+            return False
         except Exception as e:
-            self.logger.error(f"Packaging failed: {e}")
+            self.logger.error(f"Unexpected error in packaging: {e}")
             return False
 
     def deploy_project(self):
@@ -38,12 +42,15 @@ class DeploymentAgent:
         """
         self.logger.info("Starting project deployment...")
         try:
-            # Simulate deployment; replace with actual deployment commands.
-            result = subprocess.run(["echo", "Deployment simulated..."], capture_output=True, text=True)
-            self.logger.info("Deployment output:\n" + result.stdout)
+            # Replace with real deployment commands (e.g., `kubectl apply`, `scp`, `rsync`)
+            result = subprocess.run(["echo", "Deployment simulated..."], capture_output=True, text=True, check=True)
+            self.logger.info("Deployment output:\n" + result.stdout.strip())
             return True
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"Deployment command failed: {e}")
+            return False
         except Exception as e:
-            self.logger.error(f"Deployment failed: {e}")
+            self.logger.error(f"Unexpected error in deployment: {e}")
             return False
 
     def get_deployment_feedback(self, project_details):
@@ -54,11 +61,11 @@ class DeploymentAgent:
         """
         try:
             self.logger.info("Querying OpenAI API for deployment suggestions...")
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = self.client.chat.completions.create(
+                model="gpt-4-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a deployment expert."},
-                    {"role": "user", "content": f"Based on the project details, provide suggestions for a smooth deployment process: {project_details}"}
+                    {"role": "system", "content": "You are an expert in cloud deployment."},
+                    {"role": "user", "content": f"Suggest improvements for this deployment setup: {project_details}"}
                 ],
                 max_tokens=100
             )
@@ -81,8 +88,8 @@ class DeploymentAgent:
             return False
 
         deploy_success = self.deploy_project()
-        # You can include detailed project or deployment info here for more tailored feedback.
-        project_details = "Project details for deployment: server settings, environment details, etc."
+        # Include deployment details for AI feedback
+        project_details = "Project setup: CI/CD pipeline, environment details, deployment target."
         suggestions = self.get_deployment_feedback(project_details)
         self.logger.info(f"Deployment suggestions: {suggestions}")
         return deploy_success
