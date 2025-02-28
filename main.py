@@ -1,7 +1,7 @@
 import argparse
 import logging
 import os
-from openai import OpenAI
+import openai
 
 def parse_arguments():
     """Parses command-line arguments required to run DevAutomator."""
@@ -11,7 +11,7 @@ def parse_arguments():
     parser.add_argument("--api-key", help="Your OpenAI API key")
     parser.add_argument(
         "--llm-backend",
-        choices=["gpt-4o", "gpt-4", "gpt-3.5-turbo", "o1-mini"],
+        choices=["gpt-4", "gpt-3.5-turbo", "text-davinci-003"],
         default="gpt-4",
         help="Choose an LLM backend"
     )
@@ -22,26 +22,42 @@ def generate_code(api_key, research_topic, llm_backend):
     """
     Uses the OpenAI API to generate a Python script based on the given research topic.
     """
+    # Initialize the OpenAI API client
+    openai.api_key = api_key
+
     # Construct the prompt for code generation
     prompt = (
         f"Generate a complete Python script that fulfills the following requirements:\n"
         f"Research Topic: {research_topic}\n"
         "Ensure the code is well-commented and structured for a development automation process."
     )
-    
-    # Initialize the OpenAI client
-    client = OpenAI(api_key=api_key)
 
     try:
-        response = client.completions.create(
-            model=llm_backend,
-            prompt=prompt,
-            max_tokens=1024,
-            temperature=0.5,
-            n=1,
-            stop=None,
-        )
-        code = response.choices[0].text.strip()
+        if llm_backend in ["gpt-4", "gpt-3.5-turbo"]:
+            # Use the chat completion endpoint for chat models
+            response = openai.ChatCompletion.create(
+                model=llm_backend,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=1024,
+                temperature=0.5,
+                n=1,
+                stop=None,
+            )
+            code = response.choices[0].message['content'].strip()
+        else:
+            # Use the completions endpoint for non-chat models
+            response = openai.Completion.create(
+                model=llm_backend,
+                prompt=prompt,
+                max_tokens=1024,
+                temperature=0.5,
+                n=1,
+                stop=None,
+            )
+            code = response.choices[0].text.strip()
         return code
     except Exception as e:
         logging.error(f"Error during API call: {e}")
