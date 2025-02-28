@@ -70,6 +70,34 @@ class TestAgent:
             self.logger.error(f"OpenAI API call failed for test suggestions: {e}")
             return "No suggestions available."
 
+    def generate_test_suite_script(self, project_details):
+        """
+        Uses the OpenAI API to generate a complete Python test suite script using pytest.
+        :param project_details: A description of the project including test coverage details.
+        :return: The generated test suite script as a string.
+        """
+        self.logger.info("Generating test suite script using OpenAI API...")
+        prompt = (
+            "Generate a complete and well-commented Python test suite script using pytest for a software project. "
+            "The test suite should include unit tests for core functionalities, setup and teardown methods, "
+            "and sample test cases. Project Details: " + project_details
+        )
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are an expert in software testing and Python scripting."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=300  # Adjust token limit as needed
+            )
+            script = response.choices[0].message.content.strip()
+            self.logger.info("Test suite script generated successfully.")
+            return script
+        except Exception as e:
+            self.logger.error(f"OpenAI API call failed for generating test suite script: {e}")
+            return "No test suite script generated."
+
     def run_tests(self):
         """
         Executes the full test suite including unit tests and optionally integration tests.
@@ -91,6 +119,13 @@ if __name__ == "__main__":
         "test_options": "Default test settings"
     }
     test_agent = TestAgent(sample_config)
+    
+    # Running existing tests
     tests_passed = test_agent.run_tests()
     print("Tests result:", "Passed" if tests_passed else "Failed")
-
+    
+    # Generating a complete test suite script as code output
+    project_details = "This project includes a web application with REST APIs and a data processing module."
+    test_suite_script = test_agent.generate_test_suite_script(project_details)
+    print("\n=== Generated Test Suite Script ===")
+    print(test_suite_script)
