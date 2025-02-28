@@ -62,7 +62,7 @@ class DeploymentAgent:
         try:
             self.logger.info("Querying OpenAI API for deployment suggestions...")
             response = self.client.chat.completions.create(
-                model="gpt-4-turbo",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are an expert in cloud deployment."},
                     {"role": "user", "content": f"Suggest improvements for this deployment setup: {project_details}"}
