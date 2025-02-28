@@ -5,7 +5,7 @@ from openai import OpenAI  # OpenAI v1.x client
 class BuildAgent:
     def __init__(self, config):
         """
-        Initializes the Build Agent with the given configuration.
+        Initializes the BuildAgent with the given configuration.
         :param config: A configuration object/dictionary containing build options.
         """
         self.config = config
@@ -17,61 +17,56 @@ class BuildAgent:
 
     def compile_code(self):
         """
-        Simulates the code compilation/building process.
-        Optionally uses the OpenAI API to generate suggestions or code snippets.
-        :return: Boolean indicating whether the build was successful.
+        Generates a complete and optimized Python build script using the OpenAI API.
+        :return: Generated code as a string.
         """
-        self.logger.info("Starting build process...")
+        self.logger.info("Starting build code generation...")
 
-        # Simulated build steps
-        steps = [
-            "Cleaning previous builds",
-            "Compiling source code",
-            "Linking libraries",
-            "Generating binaries"
-        ]
-        for step in steps:
-            self.logger.info(f"{step}...")
+        # Construct a prompt for generating a build script
+        prompt = (
+            "Generate a complete and optimized Python build script that performs the following tasks:\n"
+            "- Cleans previous builds\n"
+            "- Compiles source code\n"
+            "- Links libraries\n"
+            "- Generates binaries\n\n"
+            "Include detailed comments for clarity."
+        )
 
-        # Use OpenAI API to get build optimization suggestions
-        suggestion = self.get_build_suggestion("How can I optimize the build process for faster compilation?")
-        self.logger.info(f"Build optimization suggestion: {suggestion}")
+        code_output = self.get_code_output(prompt)
+        self.logger.info("Build code generation completed.")
+        return code_output
 
-        build_success = True  # Simulated build success
-        self.logger.info("Build process completed successfully." if build_success else "Build process failed.")
-        return build_success
-
-    def get_build_suggestion(self, prompt):
+    def get_code_output(self, prompt):
         """
-        Uses OpenAI API to get suggestions for build optimizations.
-        :param prompt: A string prompt to send to OpenAI API.
-        :return: The response from the API as a string.
+        Uses the OpenAI API to generate code output based on the given prompt.
+        :param prompt: A string prompt to send to the OpenAI API.
+        :return: The generated code as a string.
         """
         try:
-            self.logger.info("Querying OpenAI API for build suggestions...")
+            self.logger.info("Querying OpenAI API for code generation...")
             response = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are an expert in build optimization."},
+                    {"role": "system", "content": "You are an expert in build automation and Python scripting."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=50
+                max_tokens=150,  # Adjust token limit as needed
             )
-            suggestion = response.choices[0].message.content.strip()
-            self.logger.info("Received suggestion from OpenAI API.")
-            return suggestion
+            generated_code = response.choices[0].message.content.strip()
+            self.logger.info("Received code from OpenAI API.")
+            return generated_code
         except Exception as e:
             self.logger.error(f"OpenAI API call failed: {e}")
-            return "No suggestion available."
+            return "No code generated."
 
     def run_build(self):
         """
-        Executes the full build process.
-        :return: Result of the build (True if successful, False otherwise).
+        Executes the build code generation process.
+        :return: The generated build script as a string.
         """
-        self.logger.info("Running the complete build process...")
-        result = self.compile_code()
-        return result
+        self.logger.info("Running the build code generation process...")
+        code = self.compile_code()
+        return code
 
 # Example usage (for standalone testing)
 if __name__ == "__main__":
@@ -80,5 +75,6 @@ if __name__ == "__main__":
         "openai_api_key": "YOUR_OPENAI_API_KEY_HERE"  # Replace with your actual API key
     }
     build_agent = BuildAgent(sample_config)
-    build_result = build_agent.run_build()
-    print("Build result:", "Success" if build_result else "Failure")
+    generated_code = build_agent.run_build()
+    print("=== Generated Build Code ===")
+    print(generated_code)
