@@ -1,7 +1,6 @@
-
 import logging
 from utils.logger import setup_logger  # Centralized logger from utils
-import openai  # Assuming OpenAI API is available and configured
+from openai import OpenAI  # OpenAI v1.x client
 
 class BuildAgent:
     def __init__(self, config):
@@ -12,8 +11,9 @@ class BuildAgent:
         self.config = config
         self.logger = setup_logger(__name__)
         self.logger.info("BuildAgent initialized with configuration.")
-        # Initialize OpenAI API key from configuration if available
-        openai.api_key = self.config.get("openai_api_key", "")
+
+        # Initialize OpenAI Client
+        self.client = OpenAI(api_key=self.config.get("openai_api_key", ""))
 
     def compile_code(self):
         """
@@ -23,7 +23,7 @@ class BuildAgent:
         """
         self.logger.info("Starting build process...")
 
-        # Simulated build steps with logging for clarity
+        # Simulated build steps
         steps = [
             "Cleaning previous builds",
             "Compiling source code",
@@ -32,28 +32,27 @@ class BuildAgent:
         ]
         for step in steps:
             self.logger.info(f"{step}...")
-            # Here, you could integrate real build commands or subprocess calls.
 
-        # Example: Use OpenAI API to suggest optimizations (if needed)
+        # Use OpenAI API to get build optimization suggestions
         suggestion = self.get_build_suggestion("How can I optimize the build process for faster compilation?")
         self.logger.info(f"Build optimization suggestion: {suggestion}")
 
-        build_success = True  # Simulate a successful build
+        build_success = True  # Simulated build success
         self.logger.info("Build process completed successfully." if build_success else "Build process failed.")
         return build_success
 
     def get_build_suggestion(self, prompt):
         """
-        Uses the OpenAI API to get suggestions for build optimizations.
-        :param prompt: A string prompt to send to the OpenAI API.
+        Uses OpenAI API to get suggestions for build optimizations.
+        :param prompt: A string prompt to send to OpenAI API.
         :return: The response from the API as a string.
         """
         try:
             self.logger.info("Querying OpenAI API for build suggestions...")
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = self.client.chat.completions.create(
+                model="gpt-4-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant specialized in build optimizations."},
+                    {"role": "system", "content": "You are an expert in build optimization."},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=50
@@ -83,4 +82,3 @@ if __name__ == "__main__":
     build_agent = BuildAgent(sample_config)
     build_result = build_agent.run_build()
     print("Build result:", "Success" if build_result else "Failure")
-
