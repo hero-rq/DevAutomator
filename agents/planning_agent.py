@@ -1,6 +1,7 @@
 import logging
 from openai import OpenAI  # OpenAI v1.x client
 from utils.logger import setup_logger  # Centralized logger from utils
+import json
 
 class PlanningAgent:
     def __init__(self, config):
@@ -21,7 +22,6 @@ class PlanningAgent:
         :return: A list of requirement strings.
         """
         self.logger.info("Gathering requirements...")
-        # Read 'task_notes' from config; fallback to a default note if not provided.
         requirements = self.config.get('task_notes', ["Default Requirement: Setup project structure"])
         self.logger.info(f"Requirements gathered: {requirements}")
         return requirements
@@ -81,9 +81,38 @@ class PlanningAgent:
         self.logger.info("Plan formulation completed.")
         return tasks
 
+    def generate_plan_script(self, plan):
+        """
+        Uses the OpenAI API to generate a complete Python script that prints the project plan.
+        :param plan: A structured plan (list of tasks).
+        :return: The generated Python script as a string.
+        """
+        self.logger.info("Generating plan script using OpenAI API...")
+        # Convert the plan to a formatted JSON string for clarity in the prompt
+        plan_json = json.dumps(plan, indent=2)
+        prompt = (
+            "Generate a complete Python script that, when executed, prints the following project plan in a clear and formatted manner:\n"
+            f"{plan_json}\n\n"
+            "The script should be well-commented and use pretty-print formatting for the output."
+        )
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a skilled Python developer."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=300
+            )
+            plan_script = response.choices[0].message.content.strip()
+            self.logger.info("Plan script generated successfully.")
+            return plan_script
+        except Exception as e:
+            self.logger.error(f"OpenAI API call failed for plan script generation: {e}")
+            return "No plan script generated."
+
 # Example usage (for testing the module individually)
 if __name__ == "__main__":
-    # Sample configuration with task notes and an OpenAI API key.
     sample_config = {
         "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",  # Replace with your actual API key
         "task_notes": [
@@ -96,6 +125,11 @@ if __name__ == "__main__":
     planning_agent = PlanningAgent(sample_config)
     plan = planning_agent.formulate_plan()
     
-    print("\nGenerated Plan:")
+    print("\nGenerated Plan (Task List):")
     for task in plan:
         print(task)
+    
+    # Generate and print the complete Python script for the plan
+    plan_script = planning_agent.generate_plan_script(plan)
+    print("\n=== Generated Plan Script ===")
+    print(plan_script)
