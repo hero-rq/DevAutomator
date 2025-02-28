@@ -30,7 +30,7 @@ def generate_code(api_key, research_topic):
     )
     
     # Set the API key
-    openai.api_key = api_key
+    OpenAI.api_key = api_key
 
     try:
         response = openai.Completion.create(
