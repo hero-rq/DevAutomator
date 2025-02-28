@@ -42,7 +42,7 @@ class DevFlowManager:
 
         for phase in ["build", "test", "deployment", "documentation"]:
             try:
-                method = f"run_{phase}" if phase != "documentation" else "generate_documentation"
+                method = "run_tests" if phase == "test" else "generate_documentation" if phase == "documentation" else f"run_{phase}"
                 success = getattr(self.agents[phase], method)()
                 results[phase] = "Success" if success else "Failed"
             except Exception as e:
