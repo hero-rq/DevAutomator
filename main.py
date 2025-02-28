@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-import openai
+from openai import OpenAI
 
 def parse_arguments():
     """Parses command-line arguments required for code generation."""
@@ -10,8 +10,8 @@ def parse_arguments():
     parser.add_argument("--api-key", required=True, help="Your OpenAI API key")
     parser.add_argument(
         "--llm-backend",
-        choices=["gpt-4", "gpt-3.5-turbo"],
-        default="gpt-4",
+        choices=["gpt-4o", "gpt-3.5-turbo"],
+        default="gpt-4o",
         help="Choose an LLM backend"
     )
     parser.add_argument(
@@ -34,10 +34,9 @@ def generate_code(api_key, research_topic, task_notes):
     )
     
     # Initialize the OpenAI client
-    client = openai.OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key)
 
     try:
-        # Create a completion
         response = client.completions.create(
             model="gpt-4",
             prompt=prompt,
@@ -76,4 +75,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
