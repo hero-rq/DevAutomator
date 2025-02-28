@@ -38,8 +38,8 @@ def generate_code(api_key, research_topic, llm_backend):
     )
 
     try:
-        # Since all selected models are chat-based, use ChatCompletion endpoint
-        response = client.ChatCompletion.create(
+        # Corrected API call: use chat.completions.create instead of ChatCompletion.create
+        response = client.chat.completions.create(
             model=llm_backend,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
@@ -65,7 +65,7 @@ def main():
         logging.error("OpenAI API key is required. Provide it via --api-key argument or OPENAI_API_KEY environment variable.")
         return
 
-    # Generate code using the provided arguments
+    # Generate the code using the provided arguments
     generated_code = generate_code(api_key, args.research_topic, args.llm_backend)
     
     if generated_code:
