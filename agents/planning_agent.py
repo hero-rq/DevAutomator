@@ -1,5 +1,5 @@
 import logging
-import openai
+from openai import OpenAI  # OpenAI v1.x client
 from utils.logger import setup_logger  # Centralized logger from utils
 
 class PlanningAgent:
@@ -11,8 +11,9 @@ class PlanningAgent:
         self.config = config
         self.logger = setup_logger(__name__)
         self.logger.info("PlanningAgent initialized with configuration.")
-        # Set up the OpenAI API key from configuration if provided.
-        openai.api_key = self.config.get("openai_api_key", "")
+
+        # Initialize OpenAI Client
+        self.client = OpenAI(api_key=self.config.get("openai_api_key", ""))
 
     def gather_requirements(self):
         """
@@ -33,13 +34,13 @@ class PlanningAgent:
         """
         try:
             self.logger.info("Querying OpenAI API for task refinement...")
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = self.client.chat.completions.create(
+                model="gpt-4-turbo",
                 messages=[
-                    {"role": "system", "content": "You are an expert software engineer."},
-                    {"role": "user", "content": f"Provide a detailed breakdown of tasks required to fulfill the following requirement: {requirement}"}
+                    {"role": "system", "content": "You are an expert project manager."},
+                    {"role": "user", "content": f"Break down the following requirement into actionable development tasks, including estimated effort: {requirement}"}
                 ],
-                max_tokens=100
+                max_tokens=200
             )
             task_details = response.choices[0].message.content.strip()
             self.logger.info("Received detailed task description from OpenAI API.")
@@ -50,16 +51,20 @@ class PlanningAgent:
 
     def decompose_tasks(self, requirements):
         """
-        Decomposes the requirements into actionable tasks.
+        Decomposes the requirements into structured tasks.
         :param requirements: List of requirement strings.
-        :return: A list of tasks (each task is a dictionary with details).
+        :return: A list of structured tasks.
         """
-        self.logger.info("Decomposing requirements into tasks...")
+        self.logger.info("Decomposing requirements into structured tasks...")
         tasks = []
         for req in requirements:
-            # For each requirement, use the OpenAI API to generate a refined task breakdown.
             task_description = self.get_task_description(req)
-            task = {"task": f"Handle: {req}", "details": task_description}
+            task = {
+                "requirement": req,
+                "details": task_description,
+                "priority": "High" if "core" in req.lower() else "Medium",
+                "estimated_time": "2-5 hours" if "unit tests" in req.lower() else "1-2 days"
+            }
             tasks.append(task)
             self.logger.debug(f"Task created: {task}")
         self.logger.info("Task decomposition completed.")
@@ -90,7 +95,7 @@ if __name__ == "__main__":
     }
     planning_agent = PlanningAgent(sample_config)
     plan = planning_agent.formulate_plan()
-    print("Generated Plan:")
+    
+    print("\nGenerated Plan:")
     for task in plan:
         print(task)
-
