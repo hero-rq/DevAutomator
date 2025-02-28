@@ -1,12 +1,11 @@
 import logging
-import subprocess
 from utils.logger import setup_logger  # Centralized logger from utils
 from openai import OpenAI  # OpenAI v1.x client
 
 class DeploymentAgent:
     def __init__(self, config):
         """
-        Initializes the Deployment Agent with the given configuration.
+        Initializes the DeploymentAgent with the given configuration.
         :param config: A configuration object/dictionary containing deployment settings.
         """
         self.config = config
@@ -16,83 +15,43 @@ class DeploymentAgent:
         # Initialize OpenAI Client
         self.client = OpenAI(api_key=self.config.get("openai_api_key", ""))
 
-    def package_project(self):
+    def generate_deployment_script(self):
         """
-        Packages the project for deployment.
-        This could be creating a distributable archive or building a Docker image.
-        :return: Boolean indicating whether packaging was successful.
+        Uses the OpenAI API to generate a complete deployment script in Python.
+        The script should cover packaging the project and deploying it to a target environment.
+        :return: The generated deployment script as a string.
         """
-        self.logger.info("Packaging the project for deployment...")
+        self.logger.info("Generating deployment script using OpenAI API...")
+        prompt = (
+            "Generate a complete and optimized deployment script in Python that performs the following tasks:\n"
+            "- Packages the project (e.g., creates a distributable archive or builds a Docker image)\n"
+            "- Deploys the packaged project to a target environment (e.g., cloud deployment, Kubernetes, etc.)\n\n"
+            "Include detailed comments, proper error handling, and clear step-by-step instructions."
+        )
         try:
-            # Replace this with actual packaging commands (e.g., tar, zip, docker build)
-            result = subprocess.run(["echo", "Packaging simulated..."], capture_output=True, text=True, check=True)
-            self.logger.info("Packaging output:\n" + result.stdout.strip())
-            return True
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Packaging command failed: {e}")
-            return False
-        except Exception as e:
-            self.logger.error(f"Unexpected error in packaging: {e}")
-            return False
-
-    def deploy_project(self):
-        """
-        Deploys the packaged project to a target environment.
-        :return: Boolean indicating whether the deployment was successful.
-        """
-        self.logger.info("Starting project deployment...")
-        try:
-            # Replace with real deployment commands (e.g., `kubectl apply`, `scp`, `rsync`)
-            result = subprocess.run(["echo", "Deployment simulated..."], capture_output=True, text=True, check=True)
-            self.logger.info("Deployment output:\n" + result.stdout.strip())
-            return True
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Deployment command failed: {e}")
-            return False
-        except Exception as e:
-            self.logger.error(f"Unexpected error in deployment: {e}")
-            return False
-
-    def get_deployment_feedback(self, project_details):
-        """
-        Uses the OpenAI API to get suggestions for improving the deployment process.
-        :param project_details: A description of the project or deployment details.
-        :return: Suggestions as a string.
-        """
-        try:
-            self.logger.info("Querying OpenAI API for deployment suggestions...")
             response = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are an expert in cloud deployment."},
-                    {"role": "user", "content": f"Suggest improvements for this deployment setup: {project_details}"}
+                    {"role": "system", "content": "You are an expert in cloud deployment and Python scripting."},
+                    {"role": "user", "content": prompt}
                 ],
-                max_tokens=100
+                max_tokens=250,  # Adjust token limit as needed
             )
-            suggestions = response.choices[0].message.content.strip()
-            self.logger.info("Received deployment suggestions from OpenAI API.")
-            return suggestions
+            generated_script = response.choices[0].message.content.strip()
+            self.logger.info("Deployment script generated successfully.")
+            return generated_script
         except Exception as e:
-            self.logger.error(f"OpenAI API call failed for deployment suggestions: {e}")
-            return "No suggestions available."
+            self.logger.error(f"OpenAI API call failed for generating deployment script: {e}")
+            return "No deployment script generated."
 
     def run_deployment(self):
         """
-        Executes the full deployment process including packaging and deployment.
-        :return: True if deployment was successful, False otherwise.
+        Executes the deployment script generation process.
+        :return: The generated deployment script as a string.
         """
-        self.logger.info("Running full deployment process...")
-        package_success = self.package_project()
-        if not package_success:
-            self.logger.error("Packaging failed. Aborting deployment.")
-            return False
-
-        deploy_success = self.deploy_project()
-        # Include deployment details for AI feedback
-        project_details = "Project setup: CI/CD pipeline, environment details, deployment target."
-        suggestions = self.get_deployment_feedback(project_details)
-        self.logger.info(f"Deployment suggestions: {suggestions}")
-        return deploy_success
+        self.logger.info("Running deployment script generation process...")
+        script = self.generate_deployment_script()
+        return script
 
 # Example usage (for standalone testing)
 if __name__ == "__main__":
@@ -101,5 +60,6 @@ if __name__ == "__main__":
         "deployment_options": "Default deployment settings"
     }
     deployment_agent = DeploymentAgent(sample_config)
-    deployment_result = deployment_agent.run_deployment()
-    print("Deployment result:", "Success" if deployment_result else "Failure")
+    deployment_script = deployment_agent.run_deployment()
+    print("=== Generated Deployment Script ===")
+    print(deployment_script)
