@@ -69,8 +69,3 @@ def main():
         print("Error: No API key provided. Set the OPENAI_API_KEY environment variable or use the --api-key argument.")
         return
     
-    # Define the task notes guiding the development process
-
-::contentReference[oaicite:19]{index=19}
- 
-
