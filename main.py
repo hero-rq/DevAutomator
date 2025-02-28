@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 import argparse
-from openai import OpenAI
+import openai
+import os
 
 def parse_arguments():
     """Parses command-line arguments required for code generation."""
     parser = argparse.ArgumentParser(
         description="DevAutomator: Generate development code using the OpenAI API."
     )
-    parser.add_argument("--api-key", required=True, help="Your OpenAI API key")
+    parser.add_argument("--api-key", required=False, help="Your OpenAI API key")
     parser.add_argument(
         "--llm-backend",
-        choices=["gpt-4o", "gpt-3.5-turbo"],
-        default="gpt-4o",
+        choices=["gpt-4", "gpt-3.5-turbo"],
+        default="gpt-4",
         help="Choose an LLM backend"
     )
     parser.add_argument(
@@ -25,36 +26,48 @@ def generate_code(api_key, research_topic, task_notes):
     """
     Uses the OpenAI API to generate a Python script based on the given research topic and task notes.
     """
-    # Construct the prompt for code generation
-    prompt = (
-        f"Generate a complete Python script that fulfills the following requirements:\n"
-        f"Research Topic: {research_topic}\n"
-        f"Tasks: {', '.join(task_notes)}\n\n"
-        "Ensure the code is well-commented and structured for a development automation process."
-    )
+    # Construct the messages for the chat completion
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": (
+            f"Generate a complete Python script that fulfills the following requirements:\n"
+            f"Research Topic: {research_topic}\n"
+            f"Tasks: {', '.join(task_notes)}\n\n"
+            "Ensure the code is well-commented and structured for a development automation process."
+        )}
+    ]
     
-    # Initialize the OpenAI client
-    client = OpenAI(api_key=api_key)
+    # Set the API key for authentication
+    openai.api_key = api_key
 
     try:
-        response = client.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
-            prompt=prompt,
+            messages=messages,
             max_tokens=1024,
             temperature=0.5,
             n=1,
             stop=None,
         )
+    except openai.error.OpenAIError as e:
+        print(f"OpenAI API error: {e}")
+        return None
     except Exception as e:
-        print(f"Error during API call: {e}")
+        print(f"Unexpected error: {e}")
         return None
 
-    code = response.choices[0].text.strip()
+    code = response.choices[0].message['content'].strip()
     return code
 
 def main():
     # Parse command-line arguments
     args = parse_arguments()
+    
+    # Determine the API key to use
+    api_key = args.api_key or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        print("Error: No API key provided. Set the OPENAI_API_KEY environment variable or use the --api-key argument.")
+        return
     
     # Define the task notes guiding the development process
     task_notes = [
@@ -65,7 +78,7 @@ def main():
     ]
     
     # Generate code using OpenAI API
-    generated_code = generate_code(args.api_key, args.research_topic, task_notes)
+    generated_code = generate_code(api_key, args.research_topic, task_notes)
     
     if generated_code:
         print("=== Generated Code ===")
@@ -75,5 +88,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
