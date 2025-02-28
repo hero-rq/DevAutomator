@@ -1,3 +1,5 @@
+(still doing on the progress) 
+
 # DevAutomator
 
 DevAutomator is an AI-powered automated development pipeline that integrates planning, building, testing, deployment, and documentation generation—all orchestrated by specialized agents empowered by the OpenAI API.
