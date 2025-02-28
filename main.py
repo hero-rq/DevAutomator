@@ -1,14 +1,14 @@
 import argparse
 import logging
-from openai import OpenAI
-from devflow_manager import DevFlowManager
+import os
+import openai
 
 def parse_arguments():
     """Parses command-line arguments required to run DevAutomator."""
     parser = argparse.ArgumentParser(
         description="DevAutomator: An AI-powered automated development process."
     )
-    parser.add_argument("--api-key", required=True, help="Your OpenAI API key")
+    parser.add_argument("--api-key", help="Your OpenAI API key")
     parser.add_argument(
         "--llm-backend",
         choices=["gpt-4o", "gpt-4", "gpt-3.5-turbo", "o1-mini"],
@@ -18,9 +18,9 @@ def parse_arguments():
     parser.add_argument("--research-topic", default="YOUR DEVELOPING IDEA", help="Your developing project idea")
     return parser.parse_args()
 
-def generate_code(api_key, research_topic):
+def generate_code(api_key, research_topic, llm_backend):
     """
-    Uses the OpenAI API to generate a Python script based on the given research topic and task notes.
+    Uses the OpenAI API to generate a Python script based on the given research topic.
     """
     # Construct the prompt for code generation
     prompt = (
@@ -30,36 +30,35 @@ def generate_code(api_key, research_topic):
     )
     
     # Set the API key
-    OpenAI.api_key = api_key
+    openai.api_key = api_key
 
     try:
         response = openai.Completion.create(
-            engine="text-davinci-003",
+            engine=llm_backend,
             prompt=prompt,
             max_tokens=1024,
             temperature=0.5,
             n=1,
             stop=None,
         )
+        code = response.choices[0].text.strip()
+        return code
     except Exception as e:
-        print(f"Error during API call: {e}")
+        logging.error(f"Error during API call: {e}")
         return None
-
-    code = response.choices[0].text.strip()
-    return code
 
 def main():
     # Parse command-line arguments
     args = parse_arguments()
 
-    # Setup shared configuration
-    config = {
-        "openai_api_key": args.api_key,
-        "llm_backend": args.llm_backend,
-        "research_topic": args.research_topic,
-    }
+    # Retrieve API key from environment variable if not provided as an argument
+    api_key = args.api_key or os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        logging.error("OpenAI API key is required. Provide it via --api-key argument or OPENAI_API_KEY environment variable.")
+        return
 
-    generated_code = generate_code(args.api_key, args.research_topic)
+    # Generate code using the provided arguments
+    generated_code = generate_code(api_key, args.research_topic, args.llm_backend)
     
     if generated_code:
         print("=== Generated Code ===")
@@ -68,4 +67,6 @@ def main():
         print("Failed to generate code.")
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     main()
+
