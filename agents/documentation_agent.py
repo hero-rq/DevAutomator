@@ -1,5 +1,5 @@
 import logging
-import openai
+from openai import OpenAI  # OpenAI v1.x client
 from utils.logger import setup_logger  # Centralized logger from utils
 
 class DocumentationAgent:
@@ -11,8 +11,9 @@ class DocumentationAgent:
         self.config = config
         self.logger = setup_logger(__name__)
         self.logger.info("DocumentationAgent initialized with configuration.")
-        # Set up the OpenAI API key from configuration if provided.
-        openai.api_key = self.config.get("openai_api_key", "")
+
+        # Initialize OpenAI Client
+        self.client = OpenAI(api_key=self.config.get("openai_api_key", ""))
 
     def generate_documentation(self, project_summary, code_structure):
         """
@@ -29,13 +30,13 @@ class DocumentationAgent:
                 f"Code Structure: {code_structure}\n"
                 "The documentation should include an overview, installation instructions, usage examples, and contribution guidelines."
             )
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = self.client.chat.completions.create(
+                model="gpt-4-turbo",
                 messages=[
                     {"role": "system", "content": "You are an expert technical writer."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=250
+                max_tokens=300
             )
             documentation = response.choices[0].message.content.strip()
             self.logger.info("Received documentation from OpenAI API.")
@@ -44,17 +45,25 @@ class DocumentationAgent:
             self.logger.error(f"OpenAI API call failed for documentation generation: {e}")
             return "Documentation generation failed."
 
-    def update_documentation_file(self, documentation, filepath="README.md"):
+    def update_documentation_file(self, documentation, filepath="README.md", append=False):
         """
         Writes the generated documentation to a file.
         :param documentation: The documentation text to write.
         :param filepath: Path to the documentation file.
+        :param append: If True, append to the existing file instead of overwriting.
         :return: Boolean indicating whether the file update was successful.
         """
         try:
-            self.logger.info(f"Updating documentation file at {filepath}...")
-            with open(filepath, "w") as f:
-                f.write(documentation)
+            mode = "a" if append else "w"
+            action = "Appending to" if append else "Overwriting"
+            self.logger.info(f"{action} documentation file at {filepath}...")
+
+            with open(filepath, mode) as f:
+                if append:
+                    f.write("\n\n" + documentation)
+                else:
+                    f.write(documentation)
+
             self.logger.info("Documentation file updated successfully.")
             return True
         except Exception as e:
@@ -69,8 +78,8 @@ if __name__ == "__main__":
     }
     doc_agent = DocumentationAgent(sample_config)
     project_summary = (
-        "DevAutomator is an automated development workflow that integrates planning, building, testing, "
-        "deployment, and documentation generation using AI-driven agents."
+        "DevAutomator is an AI-powered development workflow that integrates planning, building, testing, "
+        "deployment, and documentation generation using intelligent agents."
     )
     code_structure = """
 DevAutomator/
@@ -95,5 +104,5 @@ DevAutomator/
     """
     documentation = doc_agent.generate_documentation(project_summary, code_structure)
     print("Generated Documentation:\n", documentation)
-    update_success = doc_agent.update_documentation_file(documentation)
+    update_success = doc_agent.update_documentation_file(documentation, append=True)
     print("Documentation file update:", "Success" if update_success else "Failure")
