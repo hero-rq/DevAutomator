@@ -5,12 +5,12 @@ setup(
     version="0.1.0",
     packages=find_packages(),
     install_requires=[
-        "openai>=0.27.0",
+        "openai>=1.65.1",
         "pytest>=7.0.0"
     ],
     entry_points={
         "console_scripts": [
-            "devautomator=main:main",
+            "devautomator=devautomator.main:main",
         ],
     },
     author="Your Name",
