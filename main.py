@@ -11,8 +11,8 @@ def parse_arguments():
     parser.add_argument("--api-key", required=False, help="Your OpenAI API key")
     parser.add_argument(
         "--llm-backend",
-        choices=["gpt-4", "gpt-3.5-turbo"],
-        default="gpt-4",
+        choices=["gpt-4o", "gpt-3.5-turbo"],
+        default="gpt-4o",
         help="Choose an LLM backend"
     )
     parser.add_argument(
@@ -26,6 +26,9 @@ def generate_code(api_key, research_topic, task_notes):
     """
     Uses the OpenAI API to generate a Python script based on the given research topic and task notes.
     """
+    # Set the API key for authentication
+    openai.api_key = api_key
+
     # Construct the messages for the chat completion
     messages = [
         {"role": "system", "content": "You are a helpful assistant."},
@@ -36,13 +39,10 @@ def generate_code(api_key, research_topic, task_notes):
             "Ensure the code is well-commented and structured for a development automation process."
         )}
     ]
-    
-    # Set the API key for authentication
-    openai.api_key = api_key
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=messages,
             max_tokens=1024,
             temperature=0.5,
@@ -70,21 +70,7 @@ def main():
         return
     
     # Define the task notes guiding the development process
-    task_notes = [
-        "Setup development environment",
-        "Implement core features",
-        "Write unit tests",
-        "Prepare deployment scripts"
-    ]
-    
-    # Generate code using OpenAI API
-    generated_code = generate_code(api_key, args.research_topic, task_notes)
-    
-    if generated_code:
-        print("=== Generated Code ===")
-        print(generated_code)
-    else:
-        print("Failed to generate code.")
 
-if __name__ == "__main__":
-    main()
+::contentReference[oaicite:19]{index=19}
+ 
+
