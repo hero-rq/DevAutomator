@@ -10,9 +10,9 @@ def parse_arguments():
     parser.add_argument("--api-key", required=True, help="Your OpenAI API key")
     parser.add_argument(
         "--llm-backend",
-        choices=["gpt-4o", "gpt-4", "gpt-3.5-turbo", "o1-mini"],
-        default="gpt-4o",
-        help="Choose an LLM backend (currently used for reference)"
+        choices=["gpt-4", "gpt-3.5-turbo"],
+        default="gpt-4",
+        help="Choose an LLM backend"
     )
     parser.add_argument(
         "--research-topic", 
@@ -33,12 +33,13 @@ def generate_code(api_key, research_topic, task_notes):
         "Ensure the code is well-commented and structured for a development automation process."
     )
     
-    # Set the API key
-    openai.api_key = api_key
+    # Initialize the OpenAI client
+    client = openai.OpenAI(api_key=api_key)
 
     try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
+        # Create a completion
+        response = client.completions.create(
+            model="gpt-4",
             prompt=prompt,
             max_tokens=1024,
             temperature=0.5,
