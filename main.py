@@ -58,15 +58,9 @@ def main():
         "openai_api_key": args.api_key,
         "llm_backend": args.llm_backend,
         "research_topic": args.research_topic,
-        "task_notes": [
-            "Setup development environment",
-            "Implement core features",
-            "Write unit tests",
-            "Prepare deployment scripts"
-        ],
     }
 
-    generated_code = generate_code(args.api_key, args.research_topic, task_notes)
+    generated_code = generate_code(args.api_key, args.research_topic)
     
     if generated_code:
         print("=== Generated Code ===")
