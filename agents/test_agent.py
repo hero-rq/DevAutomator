@@ -56,7 +56,7 @@ class TestAgent:
         try:
             self.logger.info("Querying OpenAI API for test suggestions...")
             response = self.client.chat.completions.create(
-                model="gpt-4-turbo",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are an expert software testing engineer."},
                     {"role": "user", "content": f"Based on the following project details, provide test suggestions to ensure thorough coverage: {project_details}"}
