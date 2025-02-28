@@ -1,17 +1,30 @@
 #!/usr/bin/env python3
 import argparse
+import logging
+from openai import OpenAI
 from devflow_manager import DevFlowManager
-from utils.logger import setup_logger
+
+# Logger setup
+def setup_logger(name):
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+    logger.addHandler(handler)
+    return logger
 
 def parse_arguments():
-    """
-    Parses command-line arguments required to run the DevAutomator.
-    """
+    """Parses command-line arguments required to run DevAutomator."""
     parser = argparse.ArgumentParser(
         description="DevAutomator: An AI-powered automated development process."
     )
     parser.add_argument("--api-key", required=True, help="Your OpenAI API key")
-    parser.add_argument("--llm-backend", default="o1-mini", help="LLM backend to use (e.g., o1-mini, gpt-4)")
+    parser.add_argument(
+        "--llm-backend",
+        choices=["gpt-4o", "gpt-4", "gpt-3.5-turbo", "o1-mini"],
+        default="gpt-4o",
+        help="Choose an LLM backend"
+    )
     parser.add_argument("--research-topic", default="YOUR DEVELOPING IDEA", help="Your developing project idea")
     return parser.parse_args()
 
@@ -19,34 +32,32 @@ def main():
     # Parse command-line arguments
     args = parse_arguments()
     
-    # Setup shared configuration for the entire workflow
+    # Setup shared configuration
     config = {
         "openai_api_key": args.api_key,
         "llm_backend": args.llm_backend,
         "research_topic": args.research_topic,
-        # Predefined task notes to guide planning and overall flow
         "task_notes": [
             "Setup development environment",
             "Implement core features",
             "Write unit tests",
             "Prepare deployment scripts"
         ],
-        "build_options": "Default build options",
-        "test_options": "Default test options",
-        "deployment_options": "Default deployment options",
-        "documentation_options": "Default documentation options"
     }
     
-    # Initialize logger for the main module
+    # Initialize logger
     logger = setup_logger("main")
     logger.info("Starting DevAutomator...")
-    
-    # Instantiate the development flow manager with the configuration
-    manager = DevFlowManager(config)
-    
+
+    # Initialize OpenAI Client
+    client = OpenAI(api_key=args.api_key)
+
+    # Instantiate the development flow manager with configuration
+    manager = DevFlowManager(config, client)
+
     # Run the complete development automation flow
     success = manager.run_development_flow()
-    
+
     if success:
         logger.info("Development flow completed successfully.")
     else:
@@ -54,3 +65,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
