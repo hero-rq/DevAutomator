@@ -1,7 +1,7 @@
 import argparse
 import logging
 import os
-import openai
+from openai import OpenAI
 
 def parse_arguments():
     """Parses command-line arguments required to run DevAutomator."""
@@ -22,8 +22,8 @@ def generate_code(api_key, research_topic, llm_backend):
     """
     Uses the OpenAI API to generate a Python script based on the given research topic.
     """
-    # Initialize the OpenAI API client
-    openai.api_key = api_key
+    # Initialize the OpenAI client
+    client = OpenAI(api_key=api_key)
 
     # Construct the prompt for code generation
     prompt = (
@@ -34,8 +34,8 @@ def generate_code(api_key, research_topic, llm_backend):
 
     try:
         if llm_backend in ["gpt-4", "gpt-3.5-turbo"]:
-            # Use the chat completion endpoint for chat models
-            response = openai.ChatCompletion.create(
+            # For chat models, use the chat completions endpoint
+            response = client.chat.completions.create(
                 model=llm_backend,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
@@ -44,18 +44,16 @@ def generate_code(api_key, research_topic, llm_backend):
                 max_tokens=1024,
                 temperature=0.5,
                 n=1,
-                stop=None,
             )
-            code = response.choices[0].message['content'].strip()
+            code = response.choices[0].message["content"].strip()
         else:
-            # Use the completions endpoint for non-chat models
-            response = openai.Completion.create(
+            # For non-chat models, use the completions endpoint
+            response = client.completions.create(
                 model=llm_backend,
                 prompt=prompt,
                 max_tokens=1024,
                 temperature=0.5,
                 n=1,
-                stop=None,
             )
             code = response.choices[0].text.strip()
         return code
@@ -85,3 +83,4 @@ def main():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     main()
+
