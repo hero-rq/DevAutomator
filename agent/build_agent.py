@@ -1,7 +1,7 @@
-# DevAutomator/agents/build_agent.py
 
 import logging
 from utils.logger import setup_logger  # Centralized logger from utils
+import openai  # Assuming OpenAI API is available and configured
 
 class BuildAgent:
     def __init__(self, config):
@@ -12,14 +12,18 @@ class BuildAgent:
         self.config = config
         self.logger = setup_logger(__name__)
         self.logger.info("BuildAgent initialized with configuration.")
+        # Initialize OpenAI API key from configuration if available
+        openai.api_key = self.config.get("openai_api_key", "")
 
     def compile_code(self):
         """
         Simulates the code compilation/building process.
+        Optionally uses the OpenAI API to generate suggestions or code snippets.
         :return: Boolean indicating whether the build was successful.
         """
         self.logger.info("Starting build process...")
-        # Simulated build steps
+
+        # Simulated build steps with logging for clarity
         steps = [
             "Cleaning previous builds",
             "Compiling source code",
@@ -28,10 +32,38 @@ class BuildAgent:
         ]
         for step in steps:
             self.logger.info(f"{step}...")
-            # Here, you would add real build commands or subprocess calls.
+            # Here, you could integrate real build commands or subprocess calls.
+
+        # Example: Use OpenAI API to suggest optimizations (if needed)
+        suggestion = self.get_build_suggestion("How can I optimize the build process for faster compilation?")
+        self.logger.info(f"Build optimization suggestion: {suggestion}")
+
         build_success = True  # Simulate a successful build
         self.logger.info("Build process completed successfully." if build_success else "Build process failed.")
         return build_success
+
+    def get_build_suggestion(self, prompt):
+        """
+        Uses the OpenAI API to get suggestions for build optimizations.
+        :param prompt: A string prompt to send to the OpenAI API.
+        :return: The response from the API as a string.
+        """
+        try:
+            self.logger.info("Querying OpenAI API for build suggestions...")
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant specialized in build optimizations."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=50
+            )
+            suggestion = response.choices[0].message.content.strip()
+            self.logger.info("Received suggestion from OpenAI API.")
+            return suggestion
+        except Exception as e:
+            self.logger.error(f"OpenAI API call failed: {e}")
+            return "No suggestion available."
 
     def run_build(self):
         """
@@ -44,7 +76,11 @@ class BuildAgent:
 
 # Example usage (for standalone testing)
 if __name__ == "__main__":
-    sample_config = {"build_options": "Default options"}
+    sample_config = {
+        "build_options": "Default options",
+        "openai_api_key": "YOUR_OPENAI_API_KEY_HERE"  # Replace with your actual API key
+    }
     build_agent = BuildAgent(sample_config)
     build_result = build_agent.run_build()
     print("Build result:", "Success" if build_result else "Failure")
+
