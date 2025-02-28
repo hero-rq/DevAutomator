@@ -1,7 +1,7 @@
 import argparse
 import logging
 import os
-import openai
+from openai import OpenAI
 
 def parse_arguments():
     """Parses command-line arguments required to run DevAutomator."""
@@ -12,7 +12,7 @@ def parse_arguments():
     parser.add_argument(
         "--llm-backend",
         choices=["gpt-4o", "gpt-4", "gpt-3.5-turbo", "o1-mini"],
-        default="gpt-4o",
+        default="gpt-4",
         help="Choose an LLM backend"
     )
     parser.add_argument("--research-topic", default="YOUR DEVELOPING IDEA", help="Your developing project idea")
@@ -29,12 +29,12 @@ def generate_code(api_key, research_topic, llm_backend):
         "Ensure the code is well-commented and structured for a development automation process."
     )
     
-    # Set the API key
-    openai.api_key = api_key
+    # Initialize the OpenAI client
+    client = OpenAI(api_key=api_key)
 
     try:
-        response = openai.Completion.create(
-            engine=llm_backend,
+        response = client.completions.create(
+            model=llm_backend,
             prompt=prompt,
             max_tokens=1024,
             temperature=0.5,
@@ -69,4 +69,3 @@ def main():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     main()
-
