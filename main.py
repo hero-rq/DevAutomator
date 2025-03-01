@@ -53,7 +53,7 @@ class Agent:
             stop=None,
             temperature=0.7,
         )
-        return response.choices[0].message['content']
+        return response.choices[0].message.content.strip()
 
 def simulate_agents(api_key, model, research_topic, iterations=5):
     client = OpenAI(api_key=api_key)
