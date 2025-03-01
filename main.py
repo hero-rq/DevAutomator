@@ -12,19 +12,18 @@ This project simulates a collaboration between two agents (Alpha and Beta) that:
 • Ultimately produce the final project code.
 
 Usage:
-    python3 main.py --api-key "YOUR_OPENAI_API_KEY" --model "o1-mini" --research-topic "YOUR DEVELOPING IDEA"
+    python3 main.py --api-key "YOUR_OPENAI_API_KEY" --model "gpt-3.5-turbo" --research-topic "YOUR DEVELOPING IDEA"
 """
 
 import argparse
-import openai
+from openai import OpenAI
 
 class Agent:
-    def __init__(self, name, api_key, model, research_topic):
+    def __init__(self, name, client, model, research_topic):
         self.name = name
-        self.api_key = api_key
+        self.client = client
         self.model = model
         self.research_topic = research_topic
-        openai.api_key = self.api_key
 
     def generate_idea(self, iteration):
         prompt = (
@@ -43,13 +42,13 @@ class Agent:
         return response.strip()
 
     def call_openai_api(self, prompt):
-        response = openai.ChatCompletion.create(
+        response = self.client.chat.completions.create(
             model=self.model,
             messages=[
                 {"role": "system", "content": f"You are Agent {self.name}."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=150,
+            max_tokens=300,
             n=1,
             stop=None,
             temperature=0.7,
@@ -57,9 +56,10 @@ class Agent:
         return response.choices[0].message['content']
 
 def simulate_agents(api_key, model, research_topic, iterations=5):
+    client = OpenAI(api_key=api_key)
     agents = [
-        Agent("Alpha", api_key, model, research_topic),
-        Agent("Beta", api_key, model, research_topic)
+        Agent("Alpha", client, model, research_topic),
+        Agent("Beta", client, model, research_topic)
     ]
 
     for i in range(1, iterations + 1):
@@ -89,7 +89,7 @@ if __name__ == '__main__':
 def main():
     parser = argparse.ArgumentParser(description="Agent Collaboration Code Generator")
     parser.add_argument('--api-key', type=str, required=True, help="Your OpenAI API key")
-    parser.add_argument('--model', type=str, required=True, choices=['o1-mini', 'gpt-4o', 'gpt-3.5-turbo'], help="OpenAI model to use")
+    parser.add_argument('--model', type=str, required=True, choices=['gpt-3.5-turbo', 'gpt-4'], help="OpenAI model to use")
     parser.add_argument('--research-topic', type=str, required=True, help="Research topic or developing idea")
     args = parser.parse_args()
 
