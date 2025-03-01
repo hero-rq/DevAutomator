@@ -89,7 +89,7 @@ if __name__ == '__main__':
 def main():
     parser = argparse.ArgumentParser(description="Agent Collaboration Code Generator")
     parser.add_argument('--api-key', type=str, required=True, help="Your OpenAI API key")
-    parser.add_argument('--model', type=str, required=True, choices=['gpt-3.5-turbo', 'gpt-4'], help="OpenAI model to use")
+    parser.add_argument('--model', type=str, required=True, choices=['gpt-3.5-turbo', 'gpt-4o'], help="OpenAI model to use")
     parser.add_argument('--research-topic', type=str, required=True, help="Research topic or developing idea")
     args = parser.parse_args()
 
