@@ -12,16 +12,17 @@ This project simulates a collaboration between two agents (Alpha and Beta) that:
 • Ultimately produce the final project code.
 
 Usage:
-    python3 main.py --api-key "YOUR_OPENAI_API_KEY" --research-topic "YOUR DEVELOPING IDEA"
+    python3 main.py --api-key "YOUR_OPENAI_API_KEY" --model "o1-mini" --research-topic "YOUR DEVELOPING IDEA"
 """
 
 import argparse
 import openai
 
 class Agent:
-    def __init__(self, name, api_key, research_topic):
+    def __init__(self, name, api_key, model, research_topic):
         self.name = name
         self.api_key = api_key
+        self.model = model
         self.research_topic = research_topic
         openai.api_key = self.api_key
 
@@ -43,7 +44,7 @@ class Agent:
 
     def call_openai_api(self, prompt):
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model=self.model,
             messages=[
                 {"role": "system", "content": f"You are Agent {self.name}."},
                 {"role": "user", "content": prompt}
@@ -55,10 +56,10 @@ class Agent:
         )
         return response.choices[0].message['content']
 
-def simulate_agents(api_key, research_topic, iterations=5):
+def simulate_agents(api_key, model, research_topic, iterations=5):
     agents = [
-        Agent("Alpha", api_key, research_topic),
-        Agent("Beta", api_key, research_topic)
+        Agent("Alpha", api_key, model, research_topic),
+        Agent("Beta", api_key, model, research_topic)
     ]
 
     for i in range(1, iterations + 1):
@@ -88,12 +89,12 @@ if __name__ == '__main__':
 def main():
     parser = argparse.ArgumentParser(description="Agent Collaboration Code Generator")
     parser.add_argument('--api-key', type=str, required=True, help="Your OpenAI API key")
+    parser.add_argument('--model', type=str, required=True, choices=['o1-mini', 'gpt-4o', 'gpt-3.5-turbo'], help="OpenAI model to use")
     parser.add_argument('--research-topic', type=str, required=True, help="Research topic or developing idea")
     args = parser.parse_args()
 
-    project_code = simulate_agents(args.api_key, args.research_topic)
+    project_code = simulate_agents(args.api_key, args.model, args.research_topic)
     print(project_code)
 
 if __name__ == '__main__':
     main()
-
